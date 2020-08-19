@@ -19,6 +19,7 @@
     - export TILLER_NAMESPACE=$KUBE_NAMESPACE
     - export HELM_HOST="localhost:44134"
     - nohup tiller -listen "${HELM_HOST}" >tiller.log 2>&1 &
+    - helm2 init --client-only
     # TODO: Move this to the job image
     - helm2 plugin install https://github.com/maorfr/helm-backup
   script:
