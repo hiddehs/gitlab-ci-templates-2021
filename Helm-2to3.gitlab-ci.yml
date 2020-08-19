@@ -2,7 +2,7 @@
 # the migration of Auto DevOps releases to Helm 3.
 
 .helm-2to3:
-  image: registry.gitlab.com/gitlab-org/cluster-integration/helm-install-image/releases/helm2to3-2.16.9-3.2.4-kube-1.13.12
+  image: registry.gitlab.com/gitlab-org/cluster-integration/helm-install-image/releases/helm-2to3-2.16.9-3.2.4-kube-1.13.12
   # TODO: Do we need a new stage? This stage is not used any Auto DevOps template, but the name is misleading
   stage: deploy
   environment:
