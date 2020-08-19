@@ -24,7 +24,7 @@
     - helm2 plugin install https://github.com/maorfr/helm-backup
   script:
     - |
-      for release in $(helm2 ls --output json | jq '.Releases[].Name')
+      for release in $(helm2 ls --output json | jq '.Releases[].Name'); do
         helm2 backup "$release" --file "backup/$release"
         helm3 2to3 convert --release-storage configmaps --tiller-out-cluster --tiller-ns "$KUBE_NAMESPACE" "$release"
       done
