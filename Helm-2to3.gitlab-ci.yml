@@ -26,10 +26,10 @@
   script:
     - |
       for release in $(helm2 ls --output json | jq '.Releases[].Name'); do
-        helm2 backup "$release" --file "backup/$release"
-        helm3 2to3 convert --release-storage configmaps --tiller-out-cluster --tiller-ns "$KUBE_NAMESPACE" "$release"
+        helm2 backup "$release" --file "backups/$release" --tiller-namespace "$TILLER_NAMESPACE"
+        helm3 2to3 convert --release-storage configmaps --tiller-out-cluster --tiller-ns "$TILLER_NAMESPACE" "$release"
       done
-    - helm3 2to3 cleanup --skip-confirmation --release-storage configmaps --tiller-out-cluster --tiller-ns "$KUBE_NAMESPACE"
+    - helm3 2to3 cleanup --skip-confirmation --release-storage configmaps --tiller-out-cluster --tiller-ns "$TILLER_NAMESPACE"
 
 review:helm-2to3:
   extends: .helm-2to3
