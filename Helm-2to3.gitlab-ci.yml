@@ -1,5 +1,14 @@
 # This is a pre-release of a Helm 2to3 migration template to facilitate
 # the migration of Auto DevOps releases to Helm 3.
+#
+# Usage
+#
+# include:
+#   - project: hfyngvason/ci-templates
+#     file: Helm-2to3.gitlab-ci.yml
+# 
+# variables:
+#   MIGRATE_HELM_2TO3: "true"
 
 .helm-2to3:
   image: registry.gitlab.com/gitlab-org/cluster-integration/helm-install-image/releases/helm-2to3-2.16.9-3.2.4-kube-1.13.12
@@ -23,8 +32,11 @@
   script:
     - mkdir helm-2-release-backups
     - kubectl get configmap -n "$KUBE_NAMESPACE" -l "OWNER=TILLER" -o yaml > "helm-2-release-backups/$KUBE_NAMESPACE.yaml"
+    - releases=$(helm2 ls --output json | jq '.Releases[].Name')
+    - if [ -z $releases ]; then echo "No releases"; exit 1; fi
     - |
       for release in $releases; do
+        echo "Migrating release: $release"
         helm3 2to3 convert --release-storage configmaps --tiller-out-cluster --tiller-ns "$TILLER_NAMESPACE" "$release"
       done
     - helm3 2to3 cleanup --skip-confirmation --release-storage configmaps --tiller-out-cluster --tiller-ns "$TILLER_NAMESPACE"
