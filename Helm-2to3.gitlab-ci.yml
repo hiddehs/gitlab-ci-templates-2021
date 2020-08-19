@@ -11,7 +11,7 @@
 #   MIGRATE_HELM_2TO3: "true"
 #   AUTO_DEVOPS_FORCE_DEPLOY_V2: 1
 
-.helm-2to3:
+.helm-2to3-migrate:
   image: registry.gitlab.com/gitlab-org/cluster-integration/helm-install-image/releases/helm-2to3-2.16.9-3.2.4-kube-1.13.12
   # TODO: Do we need a new stage? This stage is not used any Auto DevOps template, but the name is misleading
   stage: deploy
@@ -24,7 +24,6 @@
     paths:
       - helm-2-release-backups/
   before_script:
-    - set -e
     - apk add jq
     - export TILLER_NAMESPACE=$KUBE_NAMESPACE
     - export HELM_HOST="localhost:44134"
@@ -43,15 +42,22 @@
         echo "Migrating release: $release"
         helm3 2to3 convert --release-storage configmaps --tiller-out-cluster --tiller-ns "$TILLER_NAMESPACE" "$release"
       done
-    # drop v2 releases
-    # TODO: Move this to the cleanup stage?
+
+.helm-2to3-cleanup:
+  image: registry.gitlab.com/gitlab-org/cluster-integration/helm-install-image/releases/helm-2to3-2.16.9-3.2.4-kube-1.13.12
+  stage: cleanup
+  environment:
+    action: prepare
+  before_script:
+    - export TILLER_NAMESPACE=$KUBE_NAMESPACE
+    - export HELM_HOST="localhost:44134"
+    - nohup tiller -listen "${HELM_HOST}" >tiller.log 2>&1 &
+    - helm2 init --client-only
+  script:
     - helm3 2to3 cleanup --skip-confirmation --release-storage configmaps --tiller-out-cluster --tiller-ns "$TILLER_NAMESPACE"
 
-review:helm-2to3:
-  extends: .helm-2to3
-  environment:
-    name: review/$CI_COMMIT_REF_NAME
-  rules:
+.review-rules:
+   rules:
     - if: '$MIGRATE_HELM_2TO3 != "true"'
       when: never
     - if: '$CI_KUBERNETES_ACTIVE == null || $CI_KUBERNETES_ACTIVE == ""'
@@ -63,10 +69,17 @@ review:helm-2to3:
     - if: '$CI_COMMIT_TAG || $CI_COMMIT_BRANCH'
       when: manual
 
-staging:helm-2to3:
-  extends: .helm-2to3
+review:helm-2to3:migrate:
+  extends: [.helm-2to3-migrate, .review-rules]
   environment:
-    name: staging
+    name: review/$CI_COMMIT_REF_NAME
+
+ review:helm-2to3:cleanup:
+  extends: [.helm-2to3-cleanup, .review-rules]
+  environment:
+    name: review/$CI_COMMIT_REF_NAME
+
+.staging-rules:
   rules:
     - if: '$MIGRATE_HELM_2TO3 != "true"'
       when: never
@@ -77,10 +90,17 @@ staging:helm-2to3:
     - if: '$STAGING_ENABLED'
       when: manual
 
-production:helm-2to3:
-  extends: .helm-2to3
+staging:helm-2to3:migrate:
+  extends: [.helm-2to3-migrate, .staging-rules]
   environment:
-    name: production
+    name: staging
+
+staging:helm-2to3:cleanup:
+  extends: [.helm-2to3-cleanup, .staging-rules]
+  environment:
+    name: staging
+  
+.production-rules:
   rules:
     - if: '$MIGRATE_HELM_2TO3 != "true"'
       when: never
@@ -88,3 +108,14 @@ production:helm-2to3:
       when: never
     - if: '$CI_COMMIT_BRANCH == "master"'
       when: manual
+
+production:helm-2to3:migrate:
+  extends: [.helm-2to3-migrate, .production-rules]
+  environment:
+    name: production
+
+production:helm-2to3:cleanup:
+  extends: [.helm-2to3-cleanup, .production-rules]
+  environment:
+    name: production
+  
