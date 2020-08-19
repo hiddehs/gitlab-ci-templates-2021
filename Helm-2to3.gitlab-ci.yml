@@ -12,7 +12,7 @@
     when: always
     expire_in: 1 week
     paths:
-      - backups/
+      - helm-2-release-backups/
   before_script:
     - set -e
     - apk add jq
@@ -20,13 +20,10 @@
     - export HELM_HOST="localhost:44134"
     - nohup tiller -listen "${HELM_HOST}" >tiller.log 2>&1 &
     - helm2 init --client-only
-    # TODO: Move this to the job image (curl is required for the plugin installation)
-    - apk add curl
-    - helm2 plugin install https://github.com/maorfr/helm-backup
   script:
-    -  helm2 backup "$KUBE_NAMESPACE" --file "backups/${KUBE_NAMESPACE}" --tiller-ns "$TILLER_NAMESPACE"
+    - kubectl get configmap -n "$KUBE_NAMESPACE" -l "OWNER=TILLER" -o yaml > "helm-2-release-backups/$KUBE_NAMESPACE.yaml"
     - |
-      for release in $(helm2 ls --output json | jq '.Releases[].Name'); do
+      for release in $releases; do
         helm3 2to3 convert --release-storage configmaps --tiller-out-cluster --tiller-ns "$TILLER_NAMESPACE" "$release"
       done
     - helm3 2to3 cleanup --skip-confirmation --release-storage configmaps --tiller-out-cluster --tiller-ns "$TILLER_NAMESPACE"
