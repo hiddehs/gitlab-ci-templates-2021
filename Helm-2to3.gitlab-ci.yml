@@ -33,7 +33,7 @@
     - mkdir helm-2-release-backups
     - kubectl get configmap -n "$KUBE_NAMESPACE" -l "OWNER=TILLER" -o yaml > "helm-2-release-backups/$KUBE_NAMESPACE.yaml"
     - releases=$(helm2 ls --output json | jq '.Releases[].Name')
-    - if [ -z $releases ]; then echo "No releases"; exit 1; fi
+    - if [ -z "$releases" ]; then echo "No releases"; exit 1; fi
     - |
       for release in $releases; do
         echo "Migrating release: $release"
