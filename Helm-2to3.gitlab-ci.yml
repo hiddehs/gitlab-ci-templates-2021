@@ -31,15 +31,20 @@
     - nohup tiller -listen "${HELM_HOST}" >tiller.log 2>&1 &
     - helm2 init --client-only
   script:
-    - mkdir helm-2-release-backups
-    - kubectl get configmap -n "$KUBE_NAMESPACE" -l "OWNER=TILLER" -o yaml > "helm-2-release-backups/$KUBE_NAMESPACE.yaml"
+    # check for releases before backing up (to avoid creating an incomplete backup)
     - releases=$(helm2 ls --output json | jq -r '.Releases[].Name')
     - if [ -z "$releases" ]; then echo "No releases"; exit 1; fi
+    # back up entire namespace
+    - mkdir helm-2-release-backups
+    - kubectl get configmap -n "$KUBE_NAMESPACE" -l "OWNER=TILLER" -o yaml > "helm-2-release-backups/$KUBE_NAMESPACE.yaml"
+    # migrate each release
     - |
       for release in $releases; do
         echo "Migrating release: $release"
         helm3 2to3 convert --release-storage configmaps --tiller-out-cluster --tiller-ns "$TILLER_NAMESPACE" "$release"
       done
+    # drop v2 releases
+    # TODO: Move this to the cleanup stage?
     - helm3 2to3 cleanup --skip-confirmation --release-storage configmaps --tiller-out-cluster --tiller-ns "$TILLER_NAMESPACE"
 
 review:helm-2to3:
