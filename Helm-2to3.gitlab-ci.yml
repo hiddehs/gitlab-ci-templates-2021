@@ -21,6 +21,7 @@
     - nohup tiller -listen "${HELM_HOST}" >tiller.log 2>&1 &
     - helm2 init --client-only
   script:
+    - mkdir helm-2-release-backups
     - kubectl get configmap -n "$KUBE_NAMESPACE" -l "OWNER=TILLER" -o yaml > "helm-2-release-backups/$KUBE_NAMESPACE.yaml"
     - |
       for release in $releases; do
