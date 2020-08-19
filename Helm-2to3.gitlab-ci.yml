@@ -24,7 +24,7 @@
     - apk add curl
     - helm2 plugin install https://github.com/maorfr/helm-backup
   script:
-    -  helm2 backup "$KUBE_NAMESPACE" --file "backups/${KUBE_NAMESPACE}" --tiller-namespace "$TILLER_NAMESPACE"
+    -  helm2 backup "$KUBE_NAMESPACE" --file "backups/${KUBE_NAMESPACE}" --tiller-ns "$TILLER_NAMESPACE"
     - |
       for release in $(helm2 ls --output json | jq '.Releases[].Name'); do
         helm3 2to3 convert --release-storage configmaps --tiller-out-cluster --tiller-ns "$TILLER_NAMESPACE" "$release"
