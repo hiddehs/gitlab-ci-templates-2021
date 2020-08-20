@@ -6,7 +6,7 @@
 # include:
 #   - project: hfyngvason/ci-templates
 #     file: Helm-2to3.gitlab-ci.yml
-# 
+#
 # variables:
 #   MIGRATE_HELM_2TO3: "true"
 #   AUTO_DEVOPS_FORCE_DEPLOY_V2: 1
@@ -56,8 +56,10 @@
   script:
     - helm3 2to3 cleanup --skip-confirmation --release-storage configmaps --tiller-out-cluster --tiller-ns "$TILLER_NAMESPACE"
 
-.review-rules:
-   rules:
+.review:
+  environment:
+    name: review/$CI_COMMIT_REF_NAME
+  rules:
     - if: '$MIGRATE_HELM_2TO3 != "true"'
       when: never
     - if: '$CI_KUBERNETES_ACTIVE == null || $CI_KUBERNETES_ACTIVE == ""'
@@ -70,16 +72,14 @@
       when: manual
 
 review:helm-2to3:migrate:
-  extends: [.helm-2to3-migrate, .review-rules]
-  environment:
-    name: review/$CI_COMMIT_REF_NAME
+  extends: [.helm-2to3-migrate, .review]
 
- review:helm-2to3:cleanup:
-  extends: [.helm-2to3-cleanup, .review-rules]
-  environment:
-    name: review/$CI_COMMIT_REF_NAME
+review:helm-2to3:cleanup:
+  extends: [.helm-2to3-cleanup, .review]
 
-.staging-rules:
+.staging:
+  environment:
+    name: staging
   rules:
     - if: '$MIGRATE_HELM_2TO3 != "true"'
       when: never
@@ -91,16 +91,14 @@ review:helm-2to3:migrate:
       when: manual
 
 staging:helm-2to3:migrate:
-  extends: [.helm-2to3-migrate, .staging-rules]
-  environment:
-    name: staging
+  extends: [.helm-2to3-migrate, .staging]
 
 staging:helm-2to3:cleanup:
-  extends: [.helm-2to3-cleanup, .staging-rules]
+  extends: [.helm-2to3-cleanup, .staging]
+
+.production:
   environment:
-    name: staging
-  
-.production-rules:
+    name: production
   rules:
     - if: '$MIGRATE_HELM_2TO3 != "true"'
       when: never
@@ -110,12 +108,7 @@ staging:helm-2to3:cleanup:
       when: manual
 
 production:helm-2to3:migrate:
-  extends: [.helm-2to3-migrate, .production-rules]
-  environment:
-    name: production
+  extends: [.helm-2to3-migrate, .production]
 
 production:helm-2to3:cleanup:
-  extends: [.helm-2to3-cleanup, .production-rules]
-  environment:
-    name: production
-  
+  extends: [.helm-2to3-cleanup, .production]
