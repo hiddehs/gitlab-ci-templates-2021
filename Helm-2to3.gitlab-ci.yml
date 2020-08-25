@@ -72,10 +72,10 @@
       when: manual
 
 review:helm-2to3:migrate:
-  extends: [.helm-2to3-migrate, .review]
+  extends: [.review, .helm-2to3-migrate]
 
 review:helm-2to3:cleanup:
-  extends: [.helm-2to3-cleanup, .review]
+  extends: [.review, .helm-2to3-cleanup]
 
 .staging:
   environment:
@@ -91,10 +91,10 @@ review:helm-2to3:cleanup:
       when: manual
 
 staging:helm-2to3:migrate:
-  extends: [.helm-2to3-migrate, .staging]
+  extends: [.staging, .helm-2to3-migrate]
 
 staging:helm-2to3:cleanup:
-  extends: [.helm-2to3-cleanup, .staging]
+  extends: [.staging, .helm-2to3-cleanup]
 
 .production:
   environment:
@@ -108,7 +108,7 @@ staging:helm-2to3:cleanup:
       when: manual
 
 production:helm-2to3:migrate:
-  extends: [.helm-2to3-migrate, .production]
+  extends: [.production, .helm-2to3-migrate]
 
 production:helm-2to3:cleanup:
-  extends: [.helm-2to3-cleanup, .production]
+  extends: [.production, .helm-2to3-cleanup]
