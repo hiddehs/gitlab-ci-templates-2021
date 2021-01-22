@@ -23,6 +23,7 @@
     expire_in: 1 week
     paths:
       - helm-2-release-backups/
+    public: false
   before_script:
     - apk add jq
     - export TILLER_NAMESPACE=$KUBE_NAMESPACE
