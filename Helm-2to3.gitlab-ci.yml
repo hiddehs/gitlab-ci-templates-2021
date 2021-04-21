@@ -53,7 +53,7 @@
     - export TILLER_NAMESPACE=$KUBE_NAMESPACE
     - export HELM_HOST="localhost:44134"
     - nohup tiller -listen "${HELM_HOST}" >tiller.log 2>&1 &
-    - helm2 init --client-only
+    - helm2 init --client-only --stable-repo-url https://charts.helm.sh/stable
   script:
     - helm3 2to3 cleanup --skip-confirmation --release-storage configmaps --tiller-out-cluster --tiller-ns "$TILLER_NAMESPACE"
 
