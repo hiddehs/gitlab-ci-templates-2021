@@ -11,6 +11,7 @@
 #   MIGRATE_HELM_2TO3: "true"
 #   AUTO_DEVOPS_FORCE_DEPLOY_V2: 1
 
+
 .helm-2to3-migrate:
   image: registry.gitlab.com/gitlab-org/cluster-integration/helm-install-image/releases/helm-2to3-2.16.9-3.2.4-kube-1.13.12
   # TODO: Do we need a new stage? This stage is not used any Auto DevOps template, but the name is misleading
